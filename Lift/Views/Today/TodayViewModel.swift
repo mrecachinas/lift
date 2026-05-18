@@ -240,8 +240,13 @@ final class TodayViewModel {
             now: now,
             calendar: currentCalendar
         )
-        reopenedDraftID = session.id
-        refresh()
+        // Apply a targeted state update instead of a full refresh: the only thing that changed is
+        // that we now have an active draft. Calling refresh() here re-fetches every model, replaces
+        // availableProgramDays/weightLoading with fresh instances, and momentarily flips isLoading
+        // — together those cause SwiftUI to remount the ScrollView, which jumps the user back to
+        // the top of the page on the first tap of the day. syncDraftPlan covers exactly the state
+        // that needs to change.
+        syncDraftPlan(session: session)
         return session
     }
 
