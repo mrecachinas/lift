@@ -248,24 +248,37 @@ struct TodayExerciseCard: View {
 
     @ViewBuilder
     private func warmupSetRow(sets: [DraftSet]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ViewThatFits(in: .horizontal) {
             HStack(alignment: .top, spacing: 8) {
                 ForEach(sets, id: \.id) { set in
-                    TodaySetTile(
-                        set: set,
-                        isNextUp: false,
-                        onTap: { onTapSet(set.id) },
-                        onEditWeight: { onEditSetWeight(set.id, $0) },
-                        onEditReps: { onEditSetReps(set.id, $0) },
-                        onDelete: { onDeleteSet(set.id) },
-                        weightLoading: weightLoading
-                    )
-                    .frame(width: 110)
+                    warmupTile(for: set)
+                        .frame(minWidth: 90)
                 }
             }
-            .padding(.trailing, 4)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 8) {
+                    ForEach(sets, id: \.id) { set in
+                        warmupTile(for: set)
+                            .frame(width: 110)
+                    }
+                }
+                .padding(.trailing, 4)
+            }
+            .scrollClipDisabled()
         }
-        .scrollClipDisabled()
+    }
+
+    private func warmupTile(for set: DraftSet) -> some View {
+        TodaySetTile(
+            set: set,
+            isNextUp: false,
+            onTap: { onTapSet(set.id) },
+            onEditWeight: { onEditSetWeight(set.id, $0) },
+            onEditReps: { onEditSetReps(set.id, $0) },
+            onDelete: { onDeleteSet(set.id) },
+            weightLoading: weightLoading
+        )
     }
 
     private var warmupSets: [DraftSet] {
