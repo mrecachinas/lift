@@ -27,15 +27,25 @@ enum Progression {
     /// Evaluates whether the working sets justify advancing the weight, and if so,
     /// returns the new weight rounded UP to the next loadable value.
     ///
+    /// `liftedWeightKg` is the weight the user actually lifted (typically the heaviest weight on
+    /// any completed working set). It defaults to `currentWeightKg` for callers that don't track
+    /// manual bumps. When the lifted weight differs from the saved progression:
+    ///
+    /// - Bump up (lifted > current, all reps hit): progression jumps straight to the lifted weight —
+    ///   the bump itself is the progression, no extra increment on top.
+    /// - Bump down (lifted < current, all reps hit): progression advances from the lifted weight
+    ///   (`lifted + increment`) using the rounding policy below, so the user keeps moving forward
+    ///   from where they actually trained instead of jumping back to a weight they just deloaded.
+    ///
     /// The rounding policy here is intentionally different from `WeightLoading.nearestLoadable`,
     /// which rounds toward the nearest value (and rounds down on ties). For progression we want:
     ///
-    /// 1. If `current + increment` is exactly loadable → use it.
-    /// 2. Otherwise, snap UP to the next loadable weight strictly greater than `current + increment`.
-    /// 3. If no loadable weight exists at or above `current + increment` (i.e. `current + increment`
-    ///    exceeds the gym's max loadable weight), fall back to the smallest loadable weight strictly
-    ///    greater than `current` so the user still advances when there is any headroom.
-    /// 4. If the user is already at the gym's max loadable weight, return `current` unchanged so the
+    /// 1. If `base + increment` is exactly loadable → use it.
+    /// 2. Otherwise, snap UP to the next loadable weight strictly greater than `base + increment`.
+    /// 3. If no loadable weight exists at or above `base + increment` (i.e. it exceeds the gym's
+    ///    max loadable weight), fall back to the smallest loadable weight strictly greater than
+    ///    `base` so the user still advances when there is any headroom.
+    /// 4. If the user is already at the gym's max loadable weight, return `base` unchanged so the
     ///    session can finish cleanly without writing a meaningless progression event.
     ///
     /// Why round UP rather than down: a successful session must always result in forward progress
@@ -47,6 +57,7 @@ enum Progression {
     static func evaluate(
         workingSets: [WorkingSetResult],
         currentWeightKg: Double,
+        liftedWeightKg: Double? = nil,
         incrementKg: Double,
         weightLoading: WeightLoading
     ) -> ProgressionOutcome {
@@ -55,7 +66,24 @@ enum Progression {
             return .stalled
         }
 
-        let proposed = currentWeightKg + incrementKg
+        let lifted = liftedWeightKg ?? currentWeightKg
+
+        // Manual bump up: the user pushed the working weight above the saved progression and hit
+        // everything. Treat the bump itself as the progression — adding another increment on top
+        // would silently double-count the user's move.
+        if lifted > currentWeightKg {
+            if weightLoading.isLoadable(lifted) {
+                return .advanced(newWeightKg: lifted)
+            }
+            if let higher = weightLoading.nextHigherLoadable(lifted) {
+                return .advanced(newWeightKg: higher)
+            }
+            return .advanced(newWeightKg: lifted)
+        }
+
+        // Normal advance or manual bump down: progress from what was actually lifted, not from the
+        // saved progression. For the normal case, lifted == current so the maths are unchanged.
+        let proposed = lifted + incrementKg
         if weightLoading.isLoadable(proposed) {
             return .advanced(newWeightKg: proposed)
         }
@@ -64,11 +92,11 @@ enum Progression {
             return .advanced(newWeightKg: higher)
         }
 
-        if let smallestAboveCurrent = weightLoading.nextHigherLoadable(currentWeightKg) {
-            return .advanced(newWeightKg: smallestAboveCurrent)
+        if let smallestAboveBase = weightLoading.nextHigherLoadable(lifted) {
+            return .advanced(newWeightKg: smallestAboveBase)
         }
 
-        return .advanced(newWeightKg: currentWeightKg)
+        return .advanced(newWeightKg: lifted)
     }
 
     static func deload(

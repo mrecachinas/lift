@@ -339,9 +339,18 @@ struct DraftSessionService {
                 )
             }
 
+            // The user might have changed the working weight mid-session via the exercise +/-
+            // buttons (or per-set bumps). We progress from what they actually lifted, not from
+            // the saved progression — that lets a manual bump-up *be* the progression and lets a
+            // deload still advance from the lower weight.
+            let liftedWeightKg = orderedWorkingSets
+                .compactMap { $0.actualReps != nil ? $0.weightKg : nil }
+                .max() ?? oldWeightKg
+
             let outcome = Progression.evaluate(
                 workingSets: orderedWorkingSets.map { WorkingSetResult(targetReps: $0.targetReps, actualReps: $0.actualReps ?? 0) },
                 currentWeightKg: oldWeightKg,
+                liftedWeightKg: liftedWeightKg,
                 incrementKg: progression.incrementKg,
                 weightLoading: weightLoading
             )
