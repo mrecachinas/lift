@@ -9,6 +9,7 @@ struct TodayView: View {
     @State private var undoCoordinator = UndoCoordinator()
     @State private var isShowingFinishSheet = false
     @State private var errorMessage: String?
+    @State private var confettiTrigger = 0
     let draftReopenCoordinator: DraftReopenCoordinator
 
     @State private var pendingSwitchTarget: PendingSwitchTarget?
@@ -103,6 +104,7 @@ struct TodayView: View {
                             perform {
                                 _ = try viewModel.finalizeCurrentSession()
                                 haptics.workoutFinished()
+                                confettiTrigger += 1
                                 draftReopenCoordinator.presentConfirmation("Progression applied")
                             }
                             isShowingFinishSheet = false
@@ -142,6 +144,10 @@ struct TodayView: View {
             } message: { target in
                 Text("This deletes \(target.loggedSetCount) logged \(target.loggedSetCount == 1 ? "set" : "sets") in your current workout.")
             }
+        }
+        .overlay {
+            ConfettiOverlay(trigger: confettiTrigger)
+                .ignoresSafeArea()
         }
     }
 

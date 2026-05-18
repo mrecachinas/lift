@@ -53,6 +53,7 @@
 		AF470BCC2D9F0303C389B60E /* RestTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC906D1831CA60FA5D8B5417 /* RestTimerService.swift */; };
 		B60E54C6C6C0EA508117455C /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B4E0C99CB8E9D2898981A06 /* AppEnvironment.swift */; };
 		BB7A83DA439167429C620798 /* TodayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916972C7CA250F6075D00080 /* TodayViewModelTests.swift */; };
+		BC63597ADCFC6732FBB69706 /* ConfettiOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F783AA6E6CDCB807979A40E2 /* ConfettiOverlay.swift */; };
 		C899D8A828BEB7B660E6BDA8 /* NotificationAuthorizationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D24718581B2427148674CDB /* NotificationAuthorizationCoordinator.swift */; };
 		D72E7666D9216B0190744C69 /* SetTapStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE11F6602FA9991A6FF2967 /* SetTapStateMachine.swift */; };
 		D7916B3FC47853A0E7763618 /* ExerciseSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB784BD32C057F0C05A482C /* ExerciseSettingsView.swift */; };
@@ -167,6 +168,7 @@
 		E4A25FBD3F292C82F171ECFC /* TestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
 		EDE11F6602FA9991A6FF2967 /* SetTapStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetTapStateMachine.swift; sourceTree = "<group>"; };
 		F2DD1C4A1CB233299793CEB6 /* LiftTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LiftTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F783AA6E6CDCB807979A40E2 /* ConfettiOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiOverlay.swift; sourceTree = "<group>"; };
 		F79705EF3AC4FB68DF3E8E23 /* LiftTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiftTheme.swift; sourceTree = "<group>"; };
 		FD22B7E7137D56729AE0F36B /* TodayViewModelSetTapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelSetTapTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -175,6 +177,7 @@
 		04DB25FBF5794F2278B3BB5D /* Today */ = {
 			isa = PBXGroup;
 			children = (
+				F783AA6E6CDCB807979A40E2 /* ConfettiOverlay.swift */,
 				00EDFE79ED1560BE3F4E03D6 /* PlateCalculatorSheet.swift */,
 				BA3200F8F9E226969678C66E /* RestTimerOverlay.swift */,
 				225ED958B3478D6184903C1F /* TodayExerciseCard.swift */,
@@ -512,6 +515,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B60E54C6C6C0EA508117455C /* AppEnvironment.swift in Sources */,
+				BC63597ADCFC6732FBB69706 /* ConfettiOverlay.swift in Sources */,
 				A069C67F69BC97D171632D54 /* DraftReopenCoordinator.swift in Sources */,
 				A519E1B768850AECEB52D950 /* DraftSessionFactory.swift in Sources */,
 				51D1ED9E49F56FEF0A42EB09 /* DraftSessionService.swift in Sources */,
