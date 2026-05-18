@@ -39,7 +39,7 @@ struct TodayViewModelSetTapTests {
 
     @Test("warmup set taps only toggle between pending and target reps")
     func warmupTapToggles() async throws {
-        let fixture = try makeFixture()
+        let fixture = try makeFixture(squatWeight: 60)
         let warmupSetID = try #require(
             fixture.viewModel.draftPlan?.exerciseLogs.first?.sets.first(where: { $0.kind == .warmup })
         ).id
@@ -121,7 +121,7 @@ struct TodayViewModelSetTapTests {
     @Test("completing the final warmup starts a rest timer before the working sets")
     func lastWarmupCompletionStartsRest() async throws {
         let restTimer = RecordingRestTimer()
-        let fixture = try makeFixture(restTimer: restTimer)
+        let fixture = try makeFixture(squatWeight: 60, restTimer: restTimer)
         let warmupSets = try #require(
             fixture.viewModel.draftPlan?.exerciseLogs.first?.sets
                 .filter { $0.kind == .warmup }
@@ -188,7 +188,7 @@ struct TodayViewModelSetTapTests {
     @Test("warmup taps do not cancel an active rest")
     func warmupTapsDoNotCancelActiveRest() async throws {
         let restTimer = RecordingRestTimer()
-        let fixture = try makeFixture(restTimer: restTimer)
+        let fixture = try makeFixture(squatWeight: 60, restTimer: restTimer)
         let warmups = try #require(
             fixture.viewModel.draftPlan?.exerciseLogs.first?.sets
                 .filter { $0.kind == .warmup }

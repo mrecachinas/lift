@@ -106,6 +106,58 @@ struct WarmupCalculatorTests {
         ))
     }
 
+    @Test("row at the floor weight returns no warmups")
+    func rowAtFloorReturnsNoWarmups() {
+        let calculator = WarmupCalculator(weightLoading: WeightLoading(barWeightKg: 20, inventory: standardInventory()))
+
+        #expect(calculator.warmupSets(forWorkingWeightKg: 30, policy: .row).isEmpty)
+        #expect(calculator.warmupSets(forWorkingWeightKg: 25, policy: .row).isEmpty)
+    }
+
+    @Test("row just above the floor only does a single warmup at the floor")
+    func rowJustAboveFloorReturnsFloorWarmup() {
+        let calculator = WarmupCalculator(weightLoading: WeightLoading(barWeightKg: 20, inventory: standardInventory()))
+
+        #expect(calculator.warmupSets(forWorkingWeightKg: 35, policy: .row).elementsEqual(
+            [(30.0, 5)],
+            by: { ($0.weightKg, $0.reps) == ($1.0, $1.1) }
+        ))
+        #expect(calculator.warmupSets(forWorkingWeightKg: 40, policy: .row).elementsEqual(
+            [(30.0, 5)],
+            by: { ($0.weightKg, $0.reps) == ($1.0, $1.1) }
+        ))
+    }
+
+    @Test("row at a moderate weight starts from the floor and skips below-floor warmups")
+    func rowAtModerateWeight() {
+        let calculator = WarmupCalculator(weightLoading: WeightLoading(barWeightKg: 20, inventory: standardInventory()))
+
+        #expect(calculator.warmupSets(forWorkingWeightKg: 50, policy: .row).elementsEqual(
+            [(30.0, 5), (40.0, 2)],
+            by: { ($0.weightKg, $0.reps) == ($1.0, $1.1) }
+        ))
+    }
+
+    @Test("heavier rows produce multiple warmups all at or above the floor")
+    func heavyRowRamp() {
+        let calculator = WarmupCalculator(weightLoading: WeightLoading(barWeightKg: 20, inventory: standardInventory()))
+
+        let result = calculator.warmupSets(forWorkingWeightKg: 60, policy: .row)
+        #expect(result.elementsEqual(
+            [(30.0, 5), (40.0, 3), (50.0, 2)],
+            by: { ($0.weightKg, $0.reps) == ($1.0, $1.1) }
+        ))
+        for set in result {
+            #expect(set.weightKg >= 30.0)
+        }
+    }
+
+    @Test("row warmup policy is wired to the row exercise key")
+    func rowExerciseUsesRowPolicy() {
+        let exercise = Exercise(key: "row", name: "Row")
+        #expect(exercise.warmupPolicy == .row)
+    }
+
     private func standardInventory() -> [PlateInventoryItem] {
         [25, 20, 15, 10, 5, 2.5, 1.25].map { PlateInventoryItem(weightKg: $0, countTotal: 2) }
     }

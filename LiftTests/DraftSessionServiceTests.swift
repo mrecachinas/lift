@@ -44,7 +44,7 @@ struct DraftSessionServiceTests {
         #expect(benchSets.filter { $0.kind == .working }.count == 3)
 
         let rowSets = try #require(session.exerciseLogs.first(where: { $0.exerciseNameSnapshot == "Row" })?.sets)
-        #expect(rowSets.filter { $0.kind == .warmup }.count == 2)
+        #expect(rowSets.filter { $0.kind == .warmup }.count == 1)
         #expect(rowSets.filter { $0.kind == .working }.count == 3)
 
         let allSets = session.exerciseLogs.flatMap(\.sets)
