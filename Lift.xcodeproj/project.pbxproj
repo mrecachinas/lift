@@ -54,6 +54,7 @@
 		B60E54C6C6C0EA508117455C /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B4E0C99CB8E9D2898981A06 /* AppEnvironment.swift */; };
 		BB7A83DA439167429C620798 /* TodayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916972C7CA250F6075D00080 /* TodayViewModelTests.swift */; };
 		BC63597ADCFC6732FBB69706 /* ConfettiOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F783AA6E6CDCB807979A40E2 /* ConfettiOverlay.swift */; };
+		C731AD2A6DCEF5AE1F95321C /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54A24A014F73B9C3C4049FDC /* HealthKitService.swift */; };
 		C899D8A828BEB7B660E6BDA8 /* NotificationAuthorizationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D24718581B2427148674CDB /* NotificationAuthorizationCoordinator.swift */; };
 		D72E7666D9216B0190744C69 /* SetTapStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE11F6602FA9991A6FF2967 /* SetTapStateMachine.swift */; };
 		D7916B3FC47853A0E7763618 /* ExerciseSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB784BD32C057F0C05A482C /* ExerciseSettingsView.swift */; };
@@ -111,6 +112,8 @@
 		4A03A0FB21DACACAEFB734A3 /* HistoryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModelTests.swift; sourceTree = "<group>"; };
 		503164419B4BB32A2E596A0A /* WeightLoading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLoading.swift; sourceTree = "<group>"; };
 		54A0A47A5DB667C3CBBE02FE /* ProgramModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramModels.swift; sourceTree = "<group>"; };
+		54A24A014F73B9C3C4049FDC /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
+		554B03AD93AC34AB2B7806CA /* Lift.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Lift.entitlements; sourceTree = "<group>"; };
 		5668C5D4D64E5B5529BA1178 /* WeightLoadingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLoadingTests.swift; sourceTree = "<group>"; };
 		58D59D5F0284FAE1501D8CA3 /* WorkoutScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutScheduler.swift; sourceTree = "<group>"; };
 		59AE8C38E61C9C2B3F774D79 /* WarmupCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmupCalculatorTests.swift; sourceTree = "<group>"; };
@@ -201,6 +204,7 @@
 				30182AC3E3F24E9B1A50A66E /* Views */,
 				761E996C2F85C74599E4B79E /* Assets.xcassets */,
 				B4298D96C4EEA93C6A209BD5 /* Info.plist */,
+				554B03AD93AC34AB2B7806CA /* Lift.entitlements */,
 				22981D9EA5B338D2E9E3C194 /* LiftApp.swift */,
 			);
 			path = Lift;
@@ -278,6 +282,7 @@
 			children = (
 				724C28029DCBE10D147DE1D1 /* DraftSessionFactory.swift */,
 				B1CCCA45B223AEC19287E266 /* ExerciseLogSummary.swift */,
+				54A24A014F73B9C3C4049FDC /* HealthKitService.swift */,
 				787F3048EA01D0F5C9C5F2D2 /* HistorySectionBuilder.swift */,
 				9C0698BB112A6E99AFE3F8BC /* LocalDay.swift */,
 				84254148D324D035CD6144E5 /* Progression.swift */,
@@ -523,6 +528,7 @@
 				257390548A5ED6A08D51CDA9 /* ExerciseLogSummary.swift in Sources */,
 				D7916B3FC47853A0E7763618 /* ExerciseSettingsView.swift in Sources */,
 				E1635D2D05517BCDC60DFD5D /* FirstRunWizard.swift in Sources */,
+				C731AD2A6DCEF5AE1F95321C /* HealthKitService.swift in Sources */,
 				8E35155AE70066521364C30F /* HistorySectionBuilder.swift in Sources */,
 				E4056C99D64E2BDC540C7B8F /* HistorySetRow.swift in Sources */,
 				F507F33986C53EC43C43576F /* HistoryView.swift in Sources */,
@@ -704,6 +710,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Lift/Lift.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Lift/Info.plist;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
@@ -844,6 +851,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Lift/Lift.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Lift/Info.plist;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;

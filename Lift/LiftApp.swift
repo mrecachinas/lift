@@ -7,6 +7,11 @@ struct LiftApp: App {
     @State private var persistenceService = PersistenceService()
     @State private var restTimer = RestTimerService()
     private let notificationDelegate = LiftNotificationDelegate()
+    #if canImport(HealthKit)
+    private let healthKit: any HealthKitWriting = LiveHealthKitService()
+    #else
+    private let healthKit: any HealthKitWriting = HealthKitStub(isAvailable: false, status: .notAvailable)
+    #endif
 
     init() {
         UNUserNotificationCenter.current().delegate = notificationDelegate
@@ -18,6 +23,7 @@ struct LiftApp: App {
                 .modelContainer(persistenceService.container)
                 .environment(\.restTimer, restTimer)
                 .environment(\.haptics, .live)
+                .environment(\.healthKit, healthKit)
                 .liftThemedScene()
         }
     }

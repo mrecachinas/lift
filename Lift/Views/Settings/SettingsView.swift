@@ -3,9 +3,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.healthKit) private var healthKit
     @State private var viewModel = SettingsViewModel()
     @State private var showResetAllConfirm = false
     @State private var resetAllError: String?
+    @State private var healthKitStatus: HealthKitAuthorizationStatus = .notDetermined
+    @State private var isRequestingHealthAccess = false
 
     var body: some View {
         NavigationStack {
@@ -67,6 +70,31 @@ struct SettingsView: View {
                     }
                 }
 
+                if healthKit.isAvailable {
+                    Section("Apple Health") {
+                        HStack {
+                            Label("Workouts", systemImage: "heart.fill")
+                            Spacer()
+                            Text(healthStatusLabel)
+                                .foregroundStyle(.secondary)
+                                .font(.subheadline)
+                        }
+
+                        if healthKitStatus == .notDetermined {
+                            Button {
+                                Task { await requestHealthAccess() }
+                            } label: {
+                                Label("Allow Lift to save workouts", systemImage: "checkmark.shield")
+                            }
+                            .disabled(isRequestingHealthAccess)
+                        } else if healthKitStatus == .denied {
+                            Text("Open the Health app to grant access to write workouts.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 Section("About") {
                     HStack {
                         Text("Version")
@@ -79,6 +107,7 @@ struct SettingsView: View {
             .task {
                 viewModel.setModelContext(modelContext)
                 viewModel.refresh()
+                healthKitStatus = healthKit.authorizationStatus()
             }
             .confirmationDialog(
                 "Reset all data?",
@@ -106,6 +135,25 @@ struct SettingsView: View {
 
     private func formatted(_ kg: Double) -> String {
         kg.formatted(.number.precision(.fractionLength(0 ... 2)))
+    }
+
+    private var healthStatusLabel: String {
+        switch healthKitStatus {
+        case .sharingAuthorized: return "Saving workouts"
+        case .denied: return "Access denied"
+        case .notDetermined: return "Not requested"
+        case .notAvailable: return "Not available"
+        }
+    }
+
+    private func requestHealthAccess() async {
+        isRequestingHealthAccess = true
+        defer { isRequestingHealthAccess = false }
+        do {
+            healthKitStatus = try await healthKit.requestAuthorizationIfNeeded()
+        } catch {
+            healthKitStatus = healthKit.authorizationStatus()
+        }
     }
 }
 

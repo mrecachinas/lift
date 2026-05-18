@@ -196,6 +196,132 @@ struct TodayViewModelTests {
         #expect(viewModel.finishWorkoutPreview == nil)
     }
 
+    @Test("finalizeCurrentSession saves the workout window to HealthKit")
+    func finalizeSavesWorkoutToHealthKit() async throws {
+        let container = try makeInMemoryContainer()
+        let context = ModelContext(container)
+        try LiftSeeder().seedIfNeeded(in: context)
+
+        let workoutA = try requireDay(named: "Workout A", from: context)
+        let service = try DraftSessionService(modelContext: context)
+        let startedAt = fixtureDate()
+        let session = try service.createDraft(for: workoutA, now: startedAt, calendar: utcCalendar())
+        for exerciseLog in session.exerciseLogs {
+            for set in exerciseLog.sets where set.kind == .working {
+                set.actualReps = set.targetReps
+            }
+        }
+        try context.save()
+
+        let endedAt = startedAt.addingTimeInterval(45 * 60)
+        let healthKit = HealthKitStub(status: .sharingAuthorized)
+        let viewModel = TodayViewModel(
+            modelContext: context,
+            clock: { endedAt },
+            timeZone: .utc,
+            healthKit: healthKit
+        )
+        viewModel.load()
+
+        _ = try viewModel.finalizeCurrentSession()
+        await viewModel.pendingHealthSaveTask?.value
+
+        #expect(healthKit.savedWorkouts == [HealthKitStub.SavedWorkout(start: startedAt, end: endedAt)])
+    }
+
+    @Test("endCurrentSessionWithoutProgression also saves to HealthKit")
+    func endWithoutProgressionSavesToHealthKit() async throws {
+        let container = try makeInMemoryContainer()
+        let context = ModelContext(container)
+        try LiftSeeder().seedIfNeeded(in: context)
+
+        let workoutA = try requireDay(named: "Workout A", from: context)
+        let service = try DraftSessionService(modelContext: context)
+        let startedAt = fixtureDate()
+        let session = try service.createDraft(for: workoutA, now: startedAt, calendar: utcCalendar())
+        session.exerciseLogs.first?.sets.first(where: { $0.kind == .working })?.actualReps = 5
+        try context.save()
+
+        let endedAt = startedAt.addingTimeInterval(20 * 60)
+        let healthKit = HealthKitStub(status: .sharingAuthorized)
+        let viewModel = TodayViewModel(
+            modelContext: context,
+            clock: { endedAt },
+            timeZone: .utc,
+            healthKit: healthKit
+        )
+        viewModel.load()
+
+        try viewModel.endCurrentSessionWithoutProgression()
+        await viewModel.pendingHealthSaveTask?.value
+
+        #expect(healthKit.savedWorkouts == [HealthKitStub.SavedWorkout(start: startedAt, end: endedAt)])
+    }
+
+    @Test("first finalize prompts for HealthKit auth before saving")
+    func firstFinalizePromptsForAuth() async throws {
+        let container = try makeInMemoryContainer()
+        let context = ModelContext(container)
+        try LiftSeeder().seedIfNeeded(in: context)
+
+        let workoutA = try requireDay(named: "Workout A", from: context)
+        let service = try DraftSessionService(modelContext: context)
+        let startedAt = fixtureDate()
+        let session = try service.createDraft(for: workoutA, now: startedAt, calendar: utcCalendar())
+        for exerciseLog in session.exerciseLogs {
+            for set in exerciseLog.sets where set.kind == .working {
+                set.actualReps = set.targetReps
+            }
+        }
+        try context.save()
+
+        let healthKit = HealthKitStub(status: .notDetermined)
+        let viewModel = TodayViewModel(
+            modelContext: context,
+            clock: { startedAt.addingTimeInterval(60) },
+            timeZone: .utc,
+            healthKit: healthKit
+        )
+        viewModel.load()
+
+        _ = try viewModel.finalizeCurrentSession()
+        await viewModel.pendingHealthSaveTask?.value
+
+        #expect(healthKit.authorizationRequested)
+        #expect(healthKit.savedWorkouts.count == 1)
+    }
+
+    @Test("finalize skips the HealthKit save when access is denied")
+    func finalizeSkipsHealthKitWhenDenied() async throws {
+        let container = try makeInMemoryContainer()
+        let context = ModelContext(container)
+        try LiftSeeder().seedIfNeeded(in: context)
+
+        let workoutA = try requireDay(named: "Workout A", from: context)
+        let service = try DraftSessionService(modelContext: context)
+        let session = try service.createDraft(for: workoutA, now: fixtureDate(), calendar: utcCalendar())
+        for exerciseLog in session.exerciseLogs {
+            for set in exerciseLog.sets where set.kind == .working {
+                set.actualReps = set.targetReps
+            }
+        }
+        try context.save()
+
+        let healthKit = HealthKitStub(status: .denied)
+        let viewModel = TodayViewModel(
+            modelContext: context,
+            clock: { fixtureDate() },
+            timeZone: .utc,
+            healthKit: healthKit
+        )
+        viewModel.load()
+
+        _ = try viewModel.finalizeCurrentSession()
+        await viewModel.pendingHealthSaveTask?.value
+
+        #expect(healthKit.savedWorkouts.isEmpty)
+    }
+
     private func requireDay(named name: String, from context: ModelContext) throws -> ProgramDay {
         let days = try fetchAll(ProgramDay.self, from: context)
         guard let day = days.first(where: { $0.name == name }) else {

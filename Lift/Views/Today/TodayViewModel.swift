@@ -35,6 +35,8 @@ final class TodayViewModel {
     private var undoCoordinator: UndoCoordinator?
     @ObservationIgnored
     private var restTimer: RestTimerStarting
+    @ObservationIgnored
+    private var healthKit: HealthKitWriting
     private(set) var activeDraftStartedAt: Date?
     private var reopenedDraftID: UUID?
     private var activeDraftSessionID: UUID?
@@ -48,12 +50,14 @@ final class TodayViewModel {
         modelContext: ModelContext? = nil,
         clock: @escaping () -> Date = { Date.now },
         timeZone: TimeZone = .current,
-        restTimer: RestTimerStarting = RestTimerStub()
+        restTimer: RestTimerStarting = RestTimerStub(),
+        healthKit: HealthKitWriting = HealthKitStub(status: .notDetermined)
     ) {
         self.modelContext = modelContext
         self.clock = clock
         self.timeZone = timeZone
         self.restTimer = restTimer
+        self.healthKit = healthKit
     }
 
     func setModelContext(_ modelContext: ModelContext) {
@@ -70,6 +74,10 @@ final class TodayViewModel {
 
     func setRestTimer(_ restTimer: any RestTimerStarting) {
         self.restTimer = restTimer
+    }
+
+    func setHealthKit(_ healthKit: HealthKitWriting) {
+        self.healthKit = healthKit
     }
 
     func load() {
@@ -680,12 +688,15 @@ final class TodayViewModel {
             return FinalizeResult(perExercise: [], nextProgramDayName: nil)
         }
 
-        let result = try draftService.finalize(session, now: now)
+        let workoutStart = session.startedAt
+        let workoutEnd = now
+        let result = try draftService.finalize(session, now: workoutEnd)
         activeDraftSessionID = nil
         reopenedDraftID = nil
         selectedProgramDay = nil
         activeDraftStartedAt = nil
         refresh()
+        saveWorkoutToHealth(start: workoutStart, end: workoutEnd)
         return result
     }
 
@@ -695,12 +706,36 @@ final class TodayViewModel {
         let draftService = try DraftSessionService(modelContext: modelContext)
         guard let session = activeDraftSession(using: draftService) else { return }
 
-        draftService.endWithoutProgression(session, now: now)
+        let workoutStart = session.startedAt
+        let workoutEnd = now
+        draftService.endWithoutProgression(session, now: workoutEnd)
         activeDraftSessionID = nil
         reopenedDraftID = nil
         selectedProgramDay = nil
         activeDraftStartedAt = nil
         refresh()
+        saveWorkoutToHealth(start: workoutStart, end: workoutEnd)
+    }
+
+    private(set) var pendingHealthSaveTask: Task<Void, Never>?
+
+    private func saveWorkoutToHealth(start: Date, end: Date) {
+        // Fire-and-forget: the user has already finished their workout, we don't want to block the
+        // UI on Apple Health. If they haven't responded to the auth prompt yet, request it first,
+        // then save — that way the first finished workout actually lands in Health.
+        let healthKit = self.healthKit
+        pendingHealthSaveTask = Task { @MainActor in
+            do {
+                if healthKit.authorizationStatus() == .notDetermined {
+                    _ = try await healthKit.requestAuthorizationIfNeeded()
+                }
+                guard healthKit.authorizationStatus() == .sharingAuthorized else { return }
+                try await healthKit.saveWorkout(start: start, end: end)
+            } catch {
+                // Health writes are best-effort: a failure here shouldn't surface as an error to
+                // the user. Their progression and history are already persisted.
+            }
+        }
     }
 
     private func restDuration(for exerciseLog: ExerciseLog) -> Int {

@@ -39,6 +39,8 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        NSHealthShareUsageDescription: Lift reads workouts so it can show your training history alongside the rest of your Apple Health activity.
+        NSHealthUpdateUsageDescription: Lift saves each finished workout to Apple Health so it shows up alongside the rest of your training history.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jurre.lift
@@ -52,6 +54,7 @@ targets:
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: 'NO'
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: Lift/Lift.entitlements
     scheme:
       testTargets:
         - LiftTests

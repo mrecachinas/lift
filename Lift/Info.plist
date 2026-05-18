@@ -18,6 +18,10 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Lift reads workouts so it can show your training history alongside the rest of your Apple Health activity.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Lift saves each finished workout to Apple Health so it shows up alongside the rest of your training history.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -29,5 +33,9 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Lift reads workouts so it can show your training history alongside the rest of your Apple Health activity.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Lift saves each finished workout to Apple Health so it shows up alongside the rest of your training history.</string>
 </dict>
 </plist>

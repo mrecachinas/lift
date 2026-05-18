@@ -5,6 +5,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.haptics) private var haptics
     @Environment(\.restTimer) private var restTimer
+    @Environment(\.healthKit) private var healthKit
     @State private var viewModel = TodayViewModel()
     @State private var undoCoordinator = UndoCoordinator()
     @State private var isShowingFinishSheet = false
@@ -79,6 +80,7 @@ struct TodayView: View {
                     viewModel.setRestTimer(restTimer)
                     restTimer.setModelContext(modelContext)
                 }
+                viewModel.setHealthKit(healthKit)
                 viewModel.load()
             }
             .safeAreaInset(edge: .bottom) {

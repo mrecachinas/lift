@@ -46,6 +46,10 @@ private struct RestTimerKey: EnvironmentKey {
     static let defaultValue: RestTimerService? = nil
 }
 
+private struct HealthKitKey: EnvironmentKey {
+    static let defaultValue: any HealthKitWriting = HealthKitStub(status: .notDetermined)
+}
+
 extension EnvironmentValues {
     var haptics: HapticsClient {
         get { self[HapticsKey.self] }
@@ -55,5 +59,10 @@ extension EnvironmentValues {
     var restTimer: RestTimerService? {
         get { self[RestTimerKey.self] }
         set { self[RestTimerKey.self] = newValue }
+    }
+
+    var healthKit: any HealthKitWriting {
+        get { self[HealthKitKey.self] }
+        set { self[HealthKitKey.self] = newValue }
     }
 }
