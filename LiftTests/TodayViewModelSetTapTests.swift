@@ -141,6 +141,84 @@ struct TodayViewModelSetTapTests {
         #expect(restTimer.startedRests.count == 1, "only the final warmup should kick off a rest")
     }
 
+    @Test("completing the final working set of an exercise does not start a new rest")
+    func finalWorkingSetDoesNotStartRest() async throws {
+        let restTimer = RecordingRestTimer()
+        let fixture = try makeFixture(restTimer: restTimer)
+        let workingSets = try #require(
+            fixture.viewModel.draftPlan?.exerciseLogs.first?.sets
+                .filter { $0.kind == .working }
+                .sorted { $0.index < $1.index }
+        )
+        try #require(workingSets.count >= 2, "fixture should have multiple working sets")
+
+        for set in workingSets {
+            try await fixture.viewModel.tapSet(set.id)
+        }
+
+        #expect(
+            restTimer.startedRests.count == workingSets.count - 1,
+            "every working set except the final one of the exercise should kick off a rest"
+        )
+        #expect(restTimer.startedRests.last?.setID != workingSets.last?.id)
+    }
+
+    @Test("logging a working set cancels any active rest before deciding to start a new one")
+    func loggingWorkingSetCancelsActiveRest() async throws {
+        let restTimer = RecordingRestTimer()
+        let fixture = try makeFixture(restTimer: restTimer)
+        let workingSets = try #require(
+            fixture.viewModel.draftPlan?.exerciseLogs.first?.sets
+                .filter { $0.kind == .working }
+                .sorted { $0.index < $1.index }
+        )
+        try #require(workingSets.count >= 2)
+
+        try await fixture.viewModel.tapSet(workingSets[0].id)
+        let skipsAfterFirstLog = restTimer.skipCount
+
+        try await fixture.viewModel.tapSet(workingSets[1].id)
+
+        #expect(
+            restTimer.skipCount > skipsAfterFirstLog,
+            "logging the next working set should cancel the prior rest"
+        )
+    }
+
+    @Test("warmup taps do not cancel an active rest")
+    func warmupTapsDoNotCancelActiveRest() async throws {
+        let restTimer = RecordingRestTimer()
+        let fixture = try makeFixture(restTimer: restTimer)
+        let warmups = try #require(
+            fixture.viewModel.draftPlan?.exerciseLogs.first?.sets
+                .filter { $0.kind == .warmup }
+                .sorted { $0.index < $1.index }
+        )
+        try #require(!warmups.isEmpty)
+
+        let skipsBefore = restTimer.skipCount
+        try await fixture.viewModel.tapSet(warmups[0].id)
+
+        #expect(restTimer.skipCount == skipsBefore)
+    }
+
+    @Test("decrementing a logged working set does not cancel the active rest")
+    func decrementWorkingSetDoesNotCancelRest() async throws {
+        let restTimer = RecordingRestTimer()
+        let fixture = try makeFixture(restTimer: restTimer)
+        let workingSet = try #require(
+            fixture.viewModel.draftPlan?.exerciseLogs.first?.sets.first(where: { $0.kind == .working })
+        )
+
+        try await fixture.viewModel.tapSet(workingSet.id)
+        let skipsAfterLog = restTimer.skipCount
+
+        // Tapping again decrements reps (complete → partial) — that's a correction, not a new log.
+        try await fixture.viewModel.tapSet(workingSet.id)
+
+        #expect(restTimer.skipCount == skipsAfterLog)
+    }
+
     @Test("editWeight updates pending sets, preserves completed sets, and refreshes pending warmups")
     func editWeightUpdatesPendingSetsAndWarmups() async throws {
         let fixture = try makeFixture(squatWeight: 65)
@@ -418,6 +496,7 @@ private final class RecordingRestTimer: RestTimerStarting {
     }
 
     private(set) var startedRests: [StartRequest] = []
+    private(set) var skipCount = 0
 
     func start(exerciseLogID: UUID, exerciseName: String, setID: UUID, durationSeconds: Int, now: Date) async {
         startedRests.append(
@@ -429,6 +508,10 @@ private final class RecordingRestTimer: RestTimerStarting {
                 now: now
             )
         )
+    }
+
+    func skip() async {
+        skipCount += 1
     }
 }
 

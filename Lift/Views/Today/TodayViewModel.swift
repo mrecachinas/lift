@@ -257,6 +257,19 @@ final class TodayViewModel {
         let previousReps = loggedSet.actualReps
         apply(transition: result.transition, to: loggedSet)
 
+        let isLoggingWorkingSet = currentState == .pending
+            && result.newState == .complete
+            && loggedSet.kind == .working
+
+        // Starting the next working set is a clearer "I'm done resting" signal than waiting for the
+        // user to tap the rest pill, so cancel any active rest (and its scheduled notification)
+        // before we decide whether to start a new one. With the "no rest after the final working
+        // set" rule below, this also stops the previous set's timer from firing after the user has
+        // moved on.
+        if isLoggingWorkingSet {
+            await restTimer.skip()
+        }
+
         if shouldStartRest(after: loggedSet, in: exerciseLog, currentState: currentState, newState: result.newState) {
             await restTimer.start(
                 exerciseLogID: exerciseLog.id,
@@ -278,7 +291,7 @@ final class TodayViewModel {
 
         try saveChanges()
         syncDraftPlan(session: session)
-        return shouldStartRest(after: loggedSet, in: exerciseLog, currentState: currentState, newState: result.newState)
+        return isLoggingWorkingSet
     }
 
     private func shouldStartRest(
@@ -290,7 +303,12 @@ final class TodayViewModel {
         guard currentState == .pending, newState == .complete else { return false }
         switch loggedSet.kind {
         case .working:
-            return true
+            // The user is moving on to the next exercise — no point counting down a rest they will
+            // never wait through. We treat "there's still a pending working set in this exercise"
+            // as the signal that more work remains for this lift.
+            return exerciseLog.sets.contains { other in
+                other.kind == .working && other.id != loggedSet.id && other.actualReps == nil
+            }
         case .warmup:
             let warmups = exerciseLog.sets.filter { $0.kind == .warmup }
             return warmups.allSatisfy { $0.actualReps != nil }
@@ -695,9 +713,11 @@ final class TodayViewModel {
 @MainActor
 protocol RestTimerStarting {
     func start(exerciseLogID: UUID, exerciseName: String, setID: UUID, durationSeconds: Int, now: Date) async
+    func skip() async
 }
 
 @MainActor
 struct RestTimerStub: RestTimerStarting {
     func start(exerciseLogID _: UUID, exerciseName _: String, setID _: UUID, durationSeconds _: Int, now _: Date) async {}
+    func skip() async {}
 }

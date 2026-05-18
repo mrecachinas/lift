@@ -125,6 +125,7 @@ private struct SwitchFixture {
 @MainActor
 private final class RecordingRestTimerForSwitchTests: RestTimerStarting {
     func start(exerciseLogID _: UUID, exerciseName _: String, setID _: UUID, durationSeconds _: Int, now _: Date) async {}
+    func skip() async {}
 }
 
 private extension TimeZone {
